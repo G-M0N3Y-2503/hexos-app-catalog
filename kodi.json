@@ -43,6 +43,7 @@
   "app_values": {
     "image": { "repository": "eshtek/kodi", "tag": "21.2-1", "pull_policy": "missing" },
     "host_network": true,
+    "restart_policy": "unless-stopped",
     "devices": "$DISPLAY_DEVICES()",
     "envs": [
       { "name": "HEXOS_DISPLAY_PCI", "value": "$DISPLAY_GPU_PCI()" },
