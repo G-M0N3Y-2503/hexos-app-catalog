@@ -12,7 +12,7 @@
   },
   "script": {
     "version": "1.0.0",
-    "changeLog": "Kodi on the TV plugged into the server, through its Intel or AMD graphics card."
+    "changeLog": "Kodi on the TV plugged into the server, through its Intel, AMD or NVIDIA graphics card."
   },
   "requirements": {
     "locations": ["ApplicationsPerformance", "Media", "Photos", "Music", "Movies", "Shows", "Videos"],
@@ -108,6 +108,10 @@
         "read_only": true,
         "host_path_config": { "path": "$LOCATION(Photos)" }
       }
-    ]
+    ],
+    "resources": {
+      "limits": { "cpus": 2, "memory": 4096 },
+      "gpus": "$DISPLAY_GPU_CONFIG()"
+    }
   }
 }

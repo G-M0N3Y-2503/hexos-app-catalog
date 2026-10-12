@@ -56,9 +56,11 @@ export const CALL_MACROS = [
   "LOCATION",
   "APP_INSTALLED",
   "GPU_CONFIG",
-  // A display app's devices (its card's DRM and HDMI audio nodes, plus input) and its card's slot.
+  // A display app's devices (its card's DRM and HDMI audio nodes, plus input), its card's slot, and its
+  // TrueNAS GPU selection (an NVIDIA card by UUID).
   "DISPLAY_DEVICES",
   "DISPLAY_GPU_PCI",
+  "DISPLAY_GPU_CONFIG",
 ] as const;
 
 /** Macros substituted as bare tokens, with no argument list. */
