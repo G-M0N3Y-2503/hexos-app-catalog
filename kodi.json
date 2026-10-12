@@ -47,6 +47,7 @@
     "devices": "$DISPLAY_DEVICES()",
     "envs": [
       { "name": "HEXOS_DISPLAY_PCI", "value": "$DISPLAY_GPU_PCI()" },
+      { "name": "HEXOS_DISPLAY_PORT", "value": "$DISPLAY_PORT()" },
       { "name": "KODI_WEB_PASSWORD", "value": "$QUESTION(remote_password)" },
       { "name": "KODI_WEB_PORT", "value": "8080" }
     ],
