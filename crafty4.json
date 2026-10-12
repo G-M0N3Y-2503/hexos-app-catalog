@@ -30,11 +30,11 @@
       "host_network": true
     },
     "storage": {
-      "backups": "$HOST_PATH($LOCATION(ApplicationsCapacity)/crafty-4/data)",
+      "backups": "$HOST_PATH($LOCATION(ApplicationsCapacity)/crafty-4/backups)",
       "config": "$HOST_PATH($LOCATION(ApplicationsPerformance)/crafty-4/config)",
       "import": "$HOST_PATH($LOCATION(ApplicationsPerformance)/crafty-4/import)",
       "logs": "$HOST_PATH($LOCATION(ApplicationsPerformance)/crafty-4/logs)",
-      "servers": "$HOST_PATH($LOCATION(ApplicationsCapacity/crafty-4/servers)"
+      "servers": "$HOST_PATH($LOCATION(ApplicationsCapacity)/crafty-4/servers)"
     },
     "resources": {
       "limits": {
