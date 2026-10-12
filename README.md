@@ -25,6 +25,7 @@ Install scripts are JSON configurations that automate app deployment on HexOS â€
 | [Immich](immich.json) | Self-hosted photo & video management |
 | [Jellyfin](jellyfin.json) | Free media server |
 | [Jellystat](jellystat.json) | Statistics App for Jellyfin |
+| [Kodi](kodi.json) | Media player on the TV plugged into the server |
 | [Lidarr](lidarr.json) | Music collection manager |
 | [Linkwarden](linkwarden.json) | Webpage archiving utility |
 | [LubeLogger](lubelogger.json) | Vehicle maintenance tracker |
