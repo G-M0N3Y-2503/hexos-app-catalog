@@ -1,8 +1,8 @@
 {
-  "version": 5,
+  "version": 6,
   "script": {
-    "version": "2.0.0",
-    "changeLog": "V5 with post-install hook for automated Emby configuration"
+    "version": "2.1.0",
+    "changeLog": "Added the now-playing widget and moved to the v6 install script format"
   },
   "requirements": {
     "locations": ["ApplicationsPerformance", "ApplicationsCapacity", "Media", "Photos", "Music", "Movies", "Shows", "Videos"],
@@ -78,7 +78,8 @@
   "hooks": [
     {
       "id": "configure-emby",
-      "event": "onAfterInstall",
+      "title": "Pre-configure Emby",
+      "events": ["onAfterInstall"],
       "script": "emby/emby_hook.ts",
       "entrypoint": "afterInstall",
       "timeout": 300,
@@ -86,7 +87,6 @@
       "optional": false,
       "retries": 0,
       "userOptional": {
-        "label": "Pre-configure Emby",
         "description": "Automatically set up your server, apply preferences, and create media libraries. By enabling this, you agree that HexOS will accept the Emby Terms of Service on your behalf.",
         "default": true,
         "link": {
@@ -131,6 +131,35 @@
           }
         }
       ]
+    }
+  ],
+  "widgetsSchema": 3,
+  "widgets": [
+    {
+      "id": "now-playing",
+      "title": "Now playing",
+      "description": "Active Emby streams right now.",
+      "refresh": 5,
+      "conditions": [
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "emby"
+        }
+      ],
+      "background": {
+        "field": "sessions"
+      },
+      "slots": [
+        {
+          "type": "list",
+          "field": "sessions",
+          "rows": 1
+        }
+      ],
+      "script": "emby/widget_now_playing.ts",
+      "entrypoint": "run",
+      "timeout": 10
     }
   ]
 }
