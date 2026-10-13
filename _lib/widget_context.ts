@@ -37,6 +37,13 @@ export interface WidgetListEntry {
   subtitles?: string[];
   meta?: string;
   /**
+   * A short line of small text under the entry where a list draws rows (at
+   * most 120 chars): why it failed, or that it is being tried again. It takes
+   * the place of a row, so a list with notes shows fewer entries. The featured
+   * form does not draw it; its line under the entry is `subtitles`.
+   */
+  note?: string;
+  /**
    * A duration in steady motion — capable renderers advance it in real
    * time between polls; the text floor (meta) must still carry a static
    * representation. state "paused" = not accruing.
@@ -58,6 +65,12 @@ export interface WidgetListEntry {
   image?: string;
 }
 
+/** One bar of a chart: a short label under it ("Mon", "sda", at most 12 chars) and its value (0 or more). */
+export interface WidgetChartPoint {
+  label: string;
+  value: number;
+}
+
 /**
  * One named field of the result document (widgetsSchema 3). The
  * declaration's `slots` reference these fields by name; the card's background
@@ -72,7 +85,22 @@ export type WidgetFieldValue =
   | { type: "list"; entries: WidgetListEntry[] }
   | { type: "image"; image: string; alt?: string }
   /** A bounded quantity: `value` is 0 to 100, `text` the caption beside the label ("3.2 GB of 5 GB", max 60 chars). */
-  | { type: "progress"; label: string; value: number; text?: string };
+  | { type: "progress"; label: string; value: number; text?: string }
+  /**
+   * A few values side by side, 2 to 7 points, the highest labelled. `axis` says what the points
+   * are: moments in order (`time`, plays by weekday) are drawn as a line, separate things
+   * (`category`, the default: a temperature per disk) as columns. `unit` follows a value where one
+   * is spelled out ("plays", "°C", max 20 chars). `tone` colours columns by value: green at `good`
+   * and beyond, red at `bad` and beyond, amber halfway (either may be the larger). A chart of all
+   * zeros says nothing, so leave the field out.
+   */
+  | {
+      type: "chart";
+      points: WidgetChartPoint[];
+      unit?: string;
+      axis?: "time" | "category";
+      tone?: { good: number; bad: number };
+    };
 
 /**
  * What a widget script returns: named fields the card's slots project
