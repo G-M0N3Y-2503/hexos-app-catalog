@@ -50,6 +50,7 @@ export const CALL_MACROS = [
   "IF",
   "QUESTION",
   "MEMORY",
+  "CPUS",
   "RANDOM_STRING",
   "HOST_PATH",
   "MOUNTED_HOST_PATH",
