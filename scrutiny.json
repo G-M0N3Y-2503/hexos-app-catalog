@@ -84,6 +84,17 @@
           "rows": 2
         }
       ],
+      "slides": [
+        {
+          "title": "Temperatures",
+          "slots": [
+            {
+              "type": "chart",
+              "field": "temps"
+            }
+          ]
+        }
+      ],
       "script": "scrutiny/widget_disk_health.ts",
       "entrypoint": "run",
       "timeout": 10
