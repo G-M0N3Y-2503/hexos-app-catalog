@@ -157,6 +157,22 @@
       "entrypoint": "afterInstall",
       "timeout": 300,
       "retries": 0
+    },
+    {
+      "id": "connect-tautulli",
+      "title": "Connect to Tautulli",
+      "description": "Lets Tautulli track what's watched on this Plex server.",
+      "kind": "connect",
+      "conditions": [
+        { "role": "visibility", "type": "appInstalled", "app": "tautulli" },
+        { "role": "availability", "type": "appRunning", "app": "tautulli" },
+        { "role": "availability", "type": "appRunning", "app": "plex" }
+      ],
+      "rerun": "converge",
+      "script": "plex/connect_tautulli.ts",
+      "entrypoint": "run",
+      "timeout": 180,
+      "retries": 0
     }
   ],
   "widgetsSchema": 3,
