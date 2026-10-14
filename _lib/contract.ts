@@ -24,8 +24,8 @@ export const LOCATIONS = [
   "VirtualDisks",
 ] as const;
 
-/** APP_SPEC_REGEX. */
-export const SPEC_REGEX = /^(\d+)(MBRAM|GBRAM|MB|GB|CORE)$|^GPU$/;
+/** APP_SPEC_REGEX. DISPLAY: the app draws on a TV or monitor plugged into the server. */
+export const SPEC_REGEX = /^(\d+)(MBRAM|GBRAM|MB|GB|CORE)$|^GPU$|^DISPLAY$/;
 
 /** AppPermission. */
 export const PERMISSIONS = ["READ_WRITE_LOCATIONS"] as const;
@@ -57,6 +57,12 @@ export const CALL_MACROS = [
   "LOCATION",
   "APP_INSTALLED",
   "GPU_CONFIG",
+  // A display app's devices (its card's DRM and HDMI audio nodes, plus input), its card's slot, its
+  // TrueNAS GPU selection (an NVIDIA card by UUID), and the port it shows on ("HDMI-A:1").
+  "DISPLAY_DEVICES",
+  "DISPLAY_GPU_PCI",
+  "DISPLAY_GPU_CONFIG",
+  "DISPLAY_PORT",
 ] as const;
 
 /** Macros substituted as bare tokens, with no argument list. */
