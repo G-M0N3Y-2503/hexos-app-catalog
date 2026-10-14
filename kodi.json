@@ -3,7 +3,7 @@
   "custom": true,
   "metadata": {
     "name": "Kodi",
-    "description": "Play your movies, shows and music on the TV plugged into this server. Kodi draws straight through the server's own graphics card, so no other computer or streaming box is needed.",
+    "description": "Play your movies, shows and music on the TV plugged into this server. Kodi draws straight through the server's own graphics card, so no other computer or streaming box is needed. Your Movies, Shows and Music folders are in its library from the first start, and your Photos are ready to browse.",
     "icon": "kodi/icon.svg",
     "version": "21.2",
     "categories": ["media"],
