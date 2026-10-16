@@ -18,6 +18,7 @@ Install scripts are JSON configurations that automate app deployment on HexOS â€
 | [Draw.io](drawio.json) | Diagram and whiteboard editor |
 | [Emby](emby.json) | Media server |
 | [Excalidraw](excalidraw.json) | Virtual whiteboard for sketching |
+| [FileFlows](fileflows.json) | Automated media file conversion |
 | [Firefly III](firefly-iii.json) | Financial planning software |
 | [Fladder](fladder.json) | Front-end interface for Jellyfin |
 | [Handbrake](handbrake.json) | Video transcoder |
@@ -56,6 +57,7 @@ Install scripts are JSON configurations that automate app deployment on HexOS â€
 | [Sure](sure.json) | Financial planning software |
 | [Swiparr](swiparr.json) | Collaborative content watching decision software |
 | [Syncthing](syncthing.json) | Continuous file synchronization |
+| [Tautulli](tautulli.json) | Watch history and stats for Plex |
 | [Warracker](warracker.json) | warranty tracker |
 | [Wiki.js](wiki-js.json) | Open source Wiki software |
 

@@ -23,6 +23,7 @@ import {
   SPEC_REGEX,
   SUPPORTED_VERSIONS,
   SUPPORTED_WIDGETS_SCHEMA,
+  WIDGET_MAX_SLIDES,
   WIDGET_MAX_SLOTS,
   WIDGET_MIN_REFRESH_S,
   WIDGET_SLOT_TYPES,
@@ -106,6 +107,38 @@ function checkCondition(file: string, where: string, cond: unknown) {
         err(file, `${where}: script condition requires a script path`);
       } else {
         checkAssetPath(file, `${where}.script`, cond.script);
+      }
+    }
+  }
+}
+
+/** A widget's slots, or a slide's: 1 to 3, each a known type naming a field, rows on a list only. */
+function checkWidgetSlots(file: string, where: string, slots: unknown) {
+  if (!Array.isArray(slots) || slots.length === 0) {
+    err(file, `${where}: slots must be a non-empty array`);
+    return;
+  }
+  if (slots.length > WIDGET_MAX_SLOTS) {
+    err(file, `${where}: max ${WIDGET_MAX_SLOTS} slots`);
+  }
+  for (const [k, slot] of slots.entries()) {
+    if (!isObject(slot)) {
+      err(file, `${where}.slots[${k}]: must be an object`);
+      continue;
+    }
+    if (slot.type === "image") {
+      err(file, `${where}.slots[${k}]: an image is not a slot; name the image field in background instead`);
+    } else if (typeof slot.type !== "string" || !(WIDGET_SLOT_TYPES as readonly string[]).includes(slot.type)) {
+      err(file, `${where}.slots[${k}]: type "${String(slot.type)}" is not known`);
+    }
+    if (typeof slot.field !== "string" || !slot.field.trim()) {
+      err(file, `${where}.slots[${k}]: field is missing`);
+    }
+    if (slot.rows !== undefined) {
+      if (slot.type !== "list") {
+        err(file, `${where}.slots[${k}]: rows applies to a list slot only`);
+      } else if (typeof slot.rows !== "number" || ![1, 2, 3].includes(slot.rows)) {
+        err(file, `${where}.slots[${k}]: rows must be 1, 2 or 3`);
       }
     }
   }
@@ -598,32 +631,31 @@ function validate(file: string, script: Record<string, unknown>) {
         ) {
           err(file, `${where}.background: field is missing`);
         }
-        const slots = widget.slots;
-        if (!Array.isArray(slots) || slots.length === 0) {
-          err(file, `${where}: slots must be a non-empty array`);
-        } else {
-          if (slots.length > WIDGET_MAX_SLOTS) {
-            err(file, `${where}: max ${WIDGET_MAX_SLOTS} slots`);
-          }
-          for (const [k, slot] of slots.entries()) {
-            if (!isObject(slot)) {
-              err(file, `${where}.slots[${k}]: must be an object`);
-              continue;
+        checkWidgetSlots(file, where, widget.slots);
+        if (widget.slides !== undefined) {
+          if (!Array.isArray(widget.slides) || widget.slides.length === 0) {
+            err(file, `${where}: slides must be a non-empty array`);
+          } else {
+            if (widget.slides.length > WIDGET_MAX_SLIDES) {
+              err(file, `${where}: max ${WIDGET_MAX_SLIDES} slides`);
             }
-            if (slot.type === "image") {
-              err(file, `${where}.slots[${k}]: an image is not a slot; name the image field in background instead`);
-            } else if (typeof slot.type !== "string" || !(WIDGET_SLOT_TYPES as readonly string[]).includes(slot.type)) {
-              err(file, `${where}.slots[${k}]: type "${String(slot.type)}" is not known`);
-            }
-            if (typeof slot.field !== "string" || !slot.field.trim()) {
-              err(file, `${where}.slots[${k}]: field is missing`);
-            }
-            if (slot.rows !== undefined) {
-              if (slot.type !== "list") {
-                err(file, `${where}.slots[${k}]: rows applies to a list slot only`);
-              } else if (typeof slot.rows !== "number" || ![1, 2, 3].includes(slot.rows)) {
-                err(file, `${where}.slots[${k}]: rows must be 1, 2 or 3`);
+            for (const [k, slide] of widget.slides.entries()) {
+              if (!isObject(slide)) {
+                err(file, `${where}.slides[${k}]: must be an object`);
+                continue;
               }
+              if (typeof slide.title !== "string" || !slide.title.trim()) {
+                err(file, `${where}.slides[${k}]: title is missing`);
+              }
+              if (slide.background !== undefined) {
+                err(file, `${where}.slides[${k}]: a slide has no background; the artwork is the widget's`);
+              }
+              checkWidgetSlots(file, `${where}.slides[${k}]`, slide.slots);
+            }
+            // The card tells its views apart by title, so a repeated one would never step past.
+            const titles = [widget.title, ...widget.slides.map((slide) => (isObject(slide) ? slide.title : undefined))];
+            if (new Set(titles).size !== titles.length) {
+              err(file, `${where}: each view needs its own title; the widget's and every slide's must differ`);
             }
           }
         }
