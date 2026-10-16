@@ -300,7 +300,7 @@ async function createLibraries(ctx: HookContext, token: string): Promise<void> {
           if (resp.ok) {
             await ctx.sleep(2000);
             const verified = await getExistingLibraryPaths(ctx, token);
-            if (verified.has(lib.path)) {
+            if (verified?.has(lib.path)) {
               ctx.log(`Created library: ${lib.name}`);
               created = true;
               break;
