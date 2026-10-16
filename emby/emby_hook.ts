@@ -53,7 +53,11 @@ export async function afterInstall(ctx: HookContext) {
     token = await authenticate(ctx, username, password);
   } catch (e) {
     if (alreadyConfigured) {
-      throw new Error("Existing Emby data detected. Please retry pre-configuration with the original username and password, or skip to keep your previous install.");
+      throw new Error(
+        ctx.event === "action"
+          ? "Existing Emby data detected. Run Pre-configure Emby again with the original username and password."
+          : "Existing Emby data detected. Please retry pre-configuration with the original username and password, or skip to keep your previous install.",
+      );
     }
     throw e;
   }
@@ -218,13 +222,14 @@ const LIBRARIES = [
   { name: "Videos", collectionType: "homevideos", path: "/videos", checkpointId: "lib_videos" },
 ];
 
-async function getExistingLibraryPaths(ctx: HookContext, token: string): Promise<Set<string>> {
+/** The paths of the server's libraries, or null when they could not be read. */
+async function getExistingLibraryPaths(ctx: HookContext, token: string): Promise<Set<string> | null> {
   try {
     const resp = await fetch(api(ctx, "/Library/VirtualFolders"), {
       headers: authHeader(token),
       signal: AbortSignal.timeout(10000),
     });
-    if (!resp.ok) return new Set();
+    if (!resp.ok) return null;
     const data = await resp.json() as Array<{ Locations?: string[] }>;
     const paths = new Set<string>();
     for (const lib of data) {
@@ -232,7 +237,7 @@ async function getExistingLibraryPaths(ctx: HookContext, token: string): Promise
     }
     return paths;
   } catch {
-    return new Set();
+    return null;
   }
 }
 
@@ -240,7 +245,13 @@ async function createLibraries(ctx: HookContext, token: string): Promise<void> {
   await waitForLibrarySubsystem(ctx, token);
   await ctx.sleep(LIBRARY_PACE_MS);
 
-  const existingPaths = await getExistingLibraryPaths(ctx, token);
+  const listed = await getExistingLibraryPaths(ctx, token);
+  // A run from the app card is on a server that may already have its libraries: libraries it
+  // cannot list are not assumed missing, or it would make them again.
+  if (listed === null && ctx.event === "action") {
+    throw new Error("Could not read the server's libraries, so none were created. Run it again.");
+  }
+  const existingPaths = listed ?? new Set<string>();
 
   for (let i = 0; i < LIBRARIES.length; i++) {
     const lib = LIBRARIES[i];
@@ -313,6 +324,11 @@ async function createLibraries(ctx: HookContext, token: string): Promise<void> {
         await ctx.emitCheckpoint(lib.checkpointId, `${lib.name} — created`);
       } else {
         await ctx.updateCheckpointMessage(lib.checkpointId, `${lib.name} — failed`);
+        // A run from the app card has no retry or skip to wait on: it stops here, and running it
+        // again carries on from the libraries already made.
+        if (ctx.event === "action") {
+          throw new Error(`Could not create the ${lib.name} library. Run it again to retry it.`);
+        }
         const action = await ctx.awaitCheckpointRetry(
           lib.checkpointId,
           `Failed to create library: ${lib.name}`,
