@@ -113,7 +113,13 @@ export const HOOK_TARGET_TYPES = ["files"] as const;
 export const SUPPORTED_WIDGETS_SCHEMA = 3;
 
 /** Widget slot types. An image is never a slot: the card's artwork is its background. */
-export const WIDGET_SLOT_TYPES = ["text", "stat", "list", "progress"] as const;
+export const WIDGET_SLOT_TYPES = ["text", "stat", "list", "progress", "chart"] as const;
+
+/**
+ * Most slides a widget adds after its own title and slots. A box from before
+ * slides draws the first view alone, so that view must stand on its own.
+ */
+export const WIDGET_MAX_SLIDES = 3;
 
 /** The shortest widget `refresh` the platform honours, in seconds: one deck poll (MIN_REFRESH_S). */
 export const WIDGET_MIN_REFRESH_S = 5;

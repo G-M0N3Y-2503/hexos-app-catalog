@@ -1,8 +1,8 @@
 {
   "version": 6,
   "script": {
-    "version": "2.1.0",
-    "changeLog": "Setup is optional: a prompt left unanswered no longer fails the install, and Pre-configure Emby can be run from the app later. Moved to the v6 install script format"
+    "version": "2.2.0",
+    "changeLog": "Setup is optional: a prompt left unanswered no longer fails the install, and Pre-configure Emby can be run from the app later"
   },
   "requirements": {
     "locations": ["ApplicationsPerformance", "ApplicationsCapacity", "Media", "Photos", "Music", "Movies", "Shows", "Videos"],
@@ -138,6 +138,35 @@
           }
         }
       ]
+    }
+  ],
+  "widgetsSchema": 3,
+  "widgets": [
+    {
+      "id": "now-playing",
+      "title": "Now playing",
+      "description": "Active Emby streams right now.",
+      "refresh": 5,
+      "conditions": [
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "emby"
+        }
+      ],
+      "background": {
+        "field": "sessions"
+      },
+      "slots": [
+        {
+          "type": "list",
+          "field": "sessions",
+          "rows": 1
+        }
+      ],
+      "script": "emby/widget_now_playing.ts",
+      "entrypoint": "run",
+      "timeout": 10
     }
   ]
 }
