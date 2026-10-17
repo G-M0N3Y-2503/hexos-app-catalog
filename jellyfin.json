@@ -1,8 +1,8 @@
 {
   "version": 6,
   "script": {
-    "version": "2.1.0",
-    "changeLog": "Added the now-playing widget and moved to the v6 install script format"
+    "version": "2.2.0",
+    "changeLog": "Setup is optional: a prompt left unanswered no longer fails the install, and Pre-configure Jellyfin can be run from the app later"
   },
   "requirements": {
     "locations": ["ApplicationsPerformance", "ApplicationsCapacity", "Media", "Photos", "Music", "Movies", "Shows", "Videos"],
@@ -51,13 +51,18 @@
       "id": "configure-jellyfin",
       "title": "Pre-configure Jellyfin",
       "events": [
-        "onAfterInstall"
+        "onAfterInstall",
+        "userAction"
+      ],
+      "rerun": "converge",
+      "surfaces": [
+        "card"
       ],
       "script": "jellyfin/jellyfin_hook.ts",
       "entrypoint": "afterInstall",
       "timeout": 300,
       "description": "Setting up Jellyfin",
-      "optional": false,
+      "optional": true,
       "retries": 0,
       "userOptional": {
         "description": "Automatically set up your server, apply preferences, and create media libraries. By enabling this, you acknowledge Jellyfin's media server policy.",
