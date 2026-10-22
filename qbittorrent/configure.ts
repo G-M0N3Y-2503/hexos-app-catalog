@@ -8,8 +8,10 @@ import type { ContextMount, HookContext, HookInputDeclaration } from "../_lib/ho
  * install or collection, and a folder for downloads in progress when it keeps them with the
  * finished ones. A qBittorrent HexOS just installed has both from seed-webui, so this only checks
  * them; one the owner already had, which a collection brings in, gets them here through its own
- * WebUI. With no sign-in chosen (a run from the app's card) its sign-in stays as it is. Read at
- * qBittorrent 5.3.0, the version TrueNAS pins.
+ * WebUI. With no sign-in chosen (a run from the app's card) its sign-in stays as it is. The Radarr,
+ * Sonarr and Lidarr installed beside it get the chosen sign-in at once (`shareSignIn`), so none is
+ * locked out for using the old one before its link runs. Read at qBittorrent 5.3.0, the version
+ * TrueNAS pins.
  */
 
 interface Session {
@@ -31,6 +33,58 @@ interface SignIn {
 
 function configMount(mounts: ContextMount[]): ContextMount | undefined {
   return mounts.find((m) => m.containerPath === "/config") ?? mounts.find((m) => m.hostPath.endsWith("/qbittorrent/config"));
+}
+
+/** Radarr, Sonarr and Lidarr, by the API version each keeps its download clients under. */
+const MANAGERS = { radarr: "v3", sonarr: "v3", lidarr: "v1" } as const;
+
+interface DownloadClient {
+  id: number;
+  implementation: string;
+  fields: Array<{ name: string; value?: unknown }>;
+  [key: string]: unknown;
+}
+
+/**
+ * Gives each installed manager's entry for this qBittorrent the sign-in it now takes. A manager signs
+ * in with its own copy on every poll, and qBittorrent locks out an address after five failures, so
+ * a manager still holding an old password would be locked out before its link runs. Saved without
+ * the manager's test (`forceSave`), which signs in from that same address.
+ */
+async function shareSignIn(ctx: HookContext, signIn: SignIn) {
+  const self = new URL(ctx.baseUrl);
+  for (const [managerId, api] of Object.entries(MANAGERS)) {
+    const url = await ctx.getInstalledAppUrl(managerId);
+    if (!url) continue;
+    try {
+      const mounts = await ctx.getInstalledAppMounts(managerId);
+      const config = mounts.find((m) => m.containerPath === "/config") ?? mounts.find((m) => m.hostPath.endsWith(`/${managerId}/config`));
+      const apiKey = config && readFileSync(`${config.localPath}/config.xml`, "utf-8").match(/<ApiKey>([^<]+)<\/ApiKey>/)?.[1];
+      if (!apiKey) continue;
+      const headers = { "X-Api-Key": apiKey, "Content-Type": "application/json" };
+      const listed = await fetch(`${url}/api/${api}/downloadclient`, { headers, signal: AbortSignal.timeout(30_000) });
+      if (!listed.ok) throw new Error(`${listed.status} ${listed.statusText}`);
+      for (const client of (await listed.json()) as DownloadClient[]) {
+        const field = (name: string) => client.fields.find((f) => f.name === name)?.value;
+        // Another qBittorrent, or one the owner reaches with its API key instead, is left as it is
+        if (client.implementation !== "QBittorrent" || field("apiKey")) continue;
+        if (field("host") !== self.hostname || Number(field("port")) !== Number(self.port)) continue;
+        const fields = client.fields.map((f) =>
+          f.name === "username" ? { ...f, value: signIn.username } : f.name === "password" ? { ...f, value: signIn.password } : f,
+        );
+        const saved = await fetch(`${url}/api/${api}/downloadclient/${client.id}?forceSave=true`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({ ...client, fields }),
+          signal: AbortSignal.timeout(30_000),
+        });
+        await saved.body?.cancel();
+        if (!saved.ok) throw new Error(`${saved.status} ${saved.statusText}`);
+      }
+    } catch (error) {
+      ctx.log(`${managerId} keeps the qBittorrent sign-in it had: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 }
 
 function savedSignIn(path: string): SignIn | undefined {
@@ -185,6 +239,8 @@ export async function configure(ctx: HookContext) {
     rmSync(credentialsPath, { force: true });
     await ctx.emitCheckpoint("signIn", "qBittorrent uses the sign-in you chose");
   }
+  // Even when it already had it: an earlier run may have changed it before its links ran
+  if (wanted) await shareSignIn(ctx, wanted);
 
   // A download in progress kept apart from the finished ones, inside the folder they finish in
   const prefs = await preferences(session);

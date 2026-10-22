@@ -15,13 +15,14 @@ import type { ContextMount, HookContext, HookInputDeclaration } from "../_lib/ho
  * looks, with no remote path mapping: a mapping belongs to the box's address, not to one client,
  * and would send every other client's downloads astray.
  *
- * The manager signs in to the client with what it already has when that works. A client added now,
- * or one the manager can no longer reach with what it has, gets the client's sign-in: the one the
- * owner chose for the install or collection (`ctx.signIn`), else the one in the client's own
- * settings, else HexOS's default, and the owner is asked only when the client takes none of those.
+ * The manager gets the client's sign-in HexOS has just signed in with: the one the owner chose for
+ * the install or collection (`ctx.signIn`), else the one in the client's own settings, else HexOS's
+ * default. Only when HexOS knows none does the manager keep what it has, and the owner is asked when
+ * that fails too. The manager's own may be an old password, and qBittorrent locks out an address
+ * after five failed sign-ins, so it is never tried ahead of one HexOS knows works.
  *
- * Run again, a link puts back how the manager reaches the client, keeps a sign-in that works, and
- * fills only the choices the owner left empty.
+ * Run again, a link puts back how the manager reaches the client and its sign-in, and fills only the
+ * choices the owner left empty.
  */
 
 /** The user the TrueNAS charts run the download clients as. */
@@ -64,13 +65,17 @@ interface ClientPlan {
   /** How the manager reaches the client, by the manager's field name: put back on every run. */
   connection: Record<string, unknown>;
   /**
-   * The client's sign-in, by the manager's field name, for a client added now or one the manager's
-   * own sign-in no longer reaches: `known` without asking (undefined when HexOS knows none), `ask`
-   * as a last resort.
+   * The client's sign-in, by the manager's field name: `known`, one HexOS just signed in to the
+   * client with (undefined when it knows none), and `ask` as a last resort, checked the same way.
    */
   signIn?: { known: () => Promise<Record<string, unknown> | undefined>; ask: () => Promise<Record<string, unknown> | undefined> };
   /** The manager's choices for the client: filled only where they're empty. */
   preferences?: Record<string, unknown>;
+  /**
+   * For a client that locks out an address after failed sign-ins, what the step says when it has
+   * locked the manager out: the manager is given the sign-in anyway and connects once it ends.
+   */
+  lockout?: (managerName: string) => string;
 }
 
 interface Client {
@@ -195,37 +200,67 @@ async function link(ctx: HookContext, appId: string, name: string, prepare: (cli
       return field;
     }),
   });
-  // Saved with the manager's own connection test, which refuses a client it can't reach or sign in to
-  const save = async (signIn: Record<string, unknown>) => {
+  // Saved with the manager's own connection test, which refuses a client it can't reach or sign in
+  // to. The manager tests only a definition that changed, so an unchanged one proves nothing.
+  const save = async (signIn: Record<string, unknown>, force = false) => {
+    const query = force ? "?forceSave=true" : "";
     if (existing?.id !== undefined) {
-      await managerApi(ctx, apiKey, `/downloadclient/${existing.id}`, { method: "PUT", body: JSON.stringify(definition(signIn)) });
+      await managerApi(ctx, apiKey, `/downloadclient/${existing.id}${query}`, { method: "PUT", body: JSON.stringify(definition(signIn)) });
     } else {
-      await managerApi(ctx, apiKey, "/downloadclient", { method: "POST", body: JSON.stringify(definition(signIn)) });
+      await managerApi(ctx, apiKey, `/downloadclient${query}`, { method: "POST", body: JSON.stringify(definition(signIn)) });
     }
   };
+  // An update with forceSave skips the manager's test, but an enabled client is tested when created
+  // whatever it says (ProviderControllerBase), so a new one is created off and then switched on
+  const saveUntested = async (signIn: Record<string, unknown>) => {
+    if (existing?.id !== undefined) return save(signIn, true);
+    const off = { ...definition(signIn), enable: false };
+    const created = await managerApi<DownloadClient>(ctx, apiKey, "/downloadclient?forceSave=true", { method: "POST", body: JSON.stringify(off) });
+    await managerApi(ctx, apiKey, `/downloadclient/${created.id}?forceSave=true`, {
+      method: "PUT",
+      body: JSON.stringify({ ...off, id: created.id, enable: true }),
+    });
+  };
+  const test = (signIn: Record<string, unknown>) =>
+    managerApi(ctx, apiKey, "/downloadclient/test", { method: "POST", body: JSON.stringify(definition(signIn)) });
+  // The manager's own sign-in, which HexOS can't vouch for, is tested on its own before it is kept
+  const attempt = (signIn: Record<string, unknown>, vouched: boolean) =>
+    (existing && !vouched ? test(signIn).then(() => save(signIn)) : save(signIn)).then(
+      () => undefined,
+      (error: unknown) => error,
+    );
   const reasonOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
+  const signInRefused = (error: unknown) => /authenticat/i.test(reasonOf(error));
 
-  // The sign-in the manager already has is the owner's while it works
-  const first = existing ? {} : ((await plan.signIn?.known()) ?? {});
-  let refused: unknown;
-  try {
-    await save(first);
-  } catch (error) {
-    refused = error;
+  // A sign-in HexOS just signed in to the client with goes first: what the manager holds may be an
+  // old password, and each try with it counts toward a client's lockout of the manager's address
+  const known = await plan.signIn?.known();
+  let signIn: Record<string, unknown> = known ?? {};
+  let verified = known !== undefined;
+  let refused = await attempt(signIn, verified);
+  if (refused !== undefined && !verified && plan.signIn) {
+    const answered = await plan.signIn.ask();
+    if (answered && JSON.stringify(answered) !== JSON.stringify(signIn)) {
+      signIn = answered;
+      verified = true;
+      refused = await attempt(signIn, verified);
+    }
   }
-  if (refused !== undefined && plan.signIn) {
-    const tried = JSON.stringify(first);
-    let signIn = existing ? await plan.signIn.known() : undefined;
-    if (!signIn || JSON.stringify(signIn) === tried) signIn = await plan.signIn.ask();
-    if (signIn && JSON.stringify(signIn) !== tried) {
-      refused = undefined;
-      await save(signIn).catch((error: unknown) => {
-        refused = error;
-      });
+  // The client took this sign-in from HexOS, so refusing it to the manager means the manager's own
+  // address is locked out: saved untested, the manager connects once the lockout ends
+  if (refused !== undefined && verified && plan.lockout && signInRefused(refused)) {
+    refused = await saveUntested(signIn).then(
+      () => undefined,
+      (error: unknown) => error,
+    );
+    if (refused === undefined) {
+      await ctx.emitCheckpoint("configure", plan.lockout(manager.name));
+      return;
     }
   }
   if (refused !== undefined) {
-    ctx.fail(`${manager.name} couldn't reach ${name}`, [{ label: "Reason", value: reasonOf(refused) }]);
+    const message = signInRefused(refused) ? `${name} didn't accept ${manager.name}'s sign-in` : `${manager.name} couldn't reach ${name}`;
+    ctx.fail(message, [{ label: "Reason", value: reasonOf(refused) }]);
   }
   await ctx.emitCheckpoint("configure");
 }
@@ -304,6 +339,10 @@ export const qbittorrent = (ctx: HookContext) =>
       name: "qBittorrent",
       implementation: "QBittorrent",
       connection: {},
+      // Five failed sign-ins lock an address out for an hour by default, checked only at sign-in
+      // (WebApplication::validateCredentials and increaseFailedAttempts at qBittorrent 5.3.0)
+      lockout: (managerName) =>
+        `qBittorrent is locking ${managerName} out for now after sign-ins with its old password failed. ${managerName} has the new sign-in and connects on its own within the hour.`,
       signIn: {
         known: async () => {
           for (const candidate of [ctx.signIn, saved]) {
