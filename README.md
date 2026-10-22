@@ -82,6 +82,14 @@ Every value must match `^(\d+)(MBRAM|GBRAM|MB|GB|CORE)$` or be the literal `GPU`
 }
 ```
 
+## Jellyfin pairing actions
+
+Jellyfin offers optional connections to Jellystat and Seer, plus a read-only Fladder/Jellyfin reachability check. Jellystat and Seer depend on the Jellyfin preconfiguration choice so they can reuse its administrator sign-in. Preconfiguration remains optional.
+
+An existing Jellystat account must authenticate; the connector only creates an account when Jellystat reports a fresh setup. Both connectors refuse to replace a different existing media-server binding. Fladder's check does not change its configured server address.
+
+Run the mocked API and password-hash compatibility tests with `bun test _lib/jellyfin_links.test.ts`, then the catalog validator with `bun _lib/validate.ts`. The hook tests make no network requests.
+
 ## Contributing
 
 1. Fork this repository
