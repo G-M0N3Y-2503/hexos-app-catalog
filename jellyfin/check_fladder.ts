@@ -3,7 +3,7 @@ import type { HookContext } from "../_lib/hook_context";
 export async function run(ctx: HookContext) {
   await ctx.registerCheckpoints([
     { id: "fladder", message: "Checking Fladder is up" },
-    { id: "jellyfin", message: "Checking Jellyfin answers at Fladder's address" },
+    { id: "jellyfin", message: "Checking this Jellyfin server answers" },
     { id: "wizard", message: "Checking Jellyfin's setup is complete" },
   ]);
 

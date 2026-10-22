@@ -214,7 +214,7 @@ export async function run(ctx: HookContext) {
   await ctx.registerCheckpoints([
     { id: "locate", message: "Locating Jellystat" },
     { id: "auth", message: "Signing in to Jellyfin" },
-    { id: "apikey", message: "Creating a Jellyfin API key for Jellystat" },
+    { id: "apikey", message: "Preparing a Jellyfin API key for Jellystat" },
     { id: "configure", message: "Connecting Jellystat to Jellyfin" },
     { id: "verify", message: "Verifying the connection" },
   ]);
