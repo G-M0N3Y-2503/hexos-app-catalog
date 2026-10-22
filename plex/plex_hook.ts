@@ -101,6 +101,11 @@ async function setPreferences(authToken: string, ctx: HookContext, serverName: s
     AcceptedEULA: 1,
     PublishServerOnPlexOnlineKey: 1,
     FriendlyName: serverName,
+    // Plex scans only by hand until these are on, so what Radarr and Sonarr download would never appear
+    FSEventLibraryUpdatesEnabled: 1,
+    FSEventLibraryPartialScanEnabled: 1,
+    ScheduledLibraryUpdatesEnabled: 1,
+    ScheduledLibraryUpdateInterval: 43200,
   };
 
   for (const [key, value] of Object.entries(prefs)) {
