@@ -808,6 +808,9 @@ function validateCollection(file: string, collection: Record<string, unknown>, c
         err(file, `${at}: summary must be a few words on what the app is for`);
       }
       if (option.answers !== undefined && catalogApps.has(option.app)) checkAnswers(file, at, option.app, option.answers);
+      if (option.vpnRecommended !== undefined && typeof option.vpnRecommended !== "boolean") {
+        err(file, `${at}: vpnRecommended must be true or false`);
+      }
       for (const field of ["requires", "requiresAny"] as const) {
         const required = option[field];
         if (required === undefined) continue;
