@@ -93,7 +93,7 @@ export async function run(ctx: HookContext) {
   const plex = config && readPlex(config);
   // The owner skipped Plex's sign-in, so trying again can't help
   if (!plex) {
-    const message = "Plex isn't signed in yet. Sign in to Plex from its own web page, then connect Tautulli from Plex's Connections tab.";
+    const message = "Plex isn't signed in yet. Run Pre-configure Plex, then connect Tautulli from Plex's Connections tab.";
     if (ctx.skip) ctx.skip(message);
     ctx.fail(message);
   }

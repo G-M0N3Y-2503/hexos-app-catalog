@@ -150,7 +150,12 @@
       "title": "Pre-configure Plex",
       "description": "Setting up Plex server",
       "events": [
-        "onAfterInstall"
+        "onAfterInstall",
+        "userAction"
+      ],
+      "rerun": "converge",
+      "surfaces": [
+        "card"
       ],
       "optional": true,
       "userOptional": {
@@ -257,6 +262,9 @@
       "title": "Connect to Tautulli",
       "description": "Lets Tautulli track what's watched on this Plex server.",
       "kind": "connect",
+      "requiresHooks": [
+        "configure-plex"
+      ],
       "conditions": [
         {
           "role": "visibility",
