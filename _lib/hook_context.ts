@@ -68,7 +68,7 @@ export interface HookContext {
 
   /**
    * The sign-in the owner chose for this install or collection run, for an app whose script
-   * declares `sign_in` (a password of at least 8 characters). Undefined for a card run outside an
+   * declares `sign_in` (a username of at least 3 characters and a password of at least 8). Undefined for a card run outside an
    * install or collection, and from a deck that predates it: a hook then falls back to what it did
    * before, or asks with `askForInputs`. Never write it to a file of HexOS's own; the app's own
    * settings are where it belongs.
