@@ -28,5 +28,7 @@ jobs:
       - name: Typecheck the tooling
         run: bun run typecheck
         working-directory: _lib
+      - name: Test the hook scripts
+        run: bun test _lib/
       - name: Validate install scripts
         run: bun _lib/validate.ts

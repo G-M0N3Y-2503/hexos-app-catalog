@@ -2,7 +2,7 @@
   "version": 6,
   "script": {
     "version": "2.4.0",
-    "changeLog": "Uses the sign-in you choose as Jellyfin's administrator, which Seerr and Jellystat sign in with too. A Jellyfin you already have gets it as an administrator of its own when you add it to a collection"
+    "changeLog": "Uses the sign-in you choose as Jellyfin's administrator, which Seerr and Jellystat sign in with too, and adds a check that Fladder can reach Jellyfin. A Jellyfin you already have gets it as an administrator of its own when you add it to a collection"
   },
   "sign_in": {
     "username": true,
@@ -194,6 +194,34 @@
       "script": "jellyfin/connect_jellystat.ts",
       "entrypoint": "run",
       "timeout": 900,
+      "retries": 0
+    },
+    {
+      "id": "check-fladder",
+      "title": "Check Fladder and Jellyfin",
+      "description": "Check that Fladder and this Jellyfin server are reachable and that Jellyfin setup is complete. Fladder receives its server address during installation.",
+      "kind": "maintain",
+      "conditions": [
+        {
+          "role": "visibility",
+          "type": "appInstalled",
+          "app": "fladder"
+        },
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "fladder"
+        },
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "jellyfin"
+        }
+      ],
+      "rerun": "idempotent",
+      "script": "jellyfin/check_fladder.ts",
+      "entrypoint": "run",
+      "timeout": 120,
       "retries": 0
     }
   ],

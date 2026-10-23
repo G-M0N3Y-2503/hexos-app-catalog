@@ -133,6 +133,14 @@ An app a collection installs opens ready, with nothing left for the owner but th
 
 Each download client keeps its downloads in its own folder of the Downloads location, mounted in the client at the path Radarr, Sonarr and Lidarr see it at (they mount the whole location at `/downloads`, and qBittorrent's folder at `/config/Downloads` too), so the links add no remote path mapping, which would belong to the box's address rather than to one client. Deluge's and NZBGet's charts fix their own `/downloads` mount, so their folder is mounted again at `/downloads/<app>`, which leaves an empty folder of that name inside it. Every client keeps a download in progress apart from finished ones, inside its own folder: qBittorrent in `incomplete` and `complete`, Deluge in `incomplete` and `complete` (its own default and the managers' Download and Move Completed folders), SABnzbd in `incomplete` and `complete`, NZBGet in its stock `intermediate` and `completed`. A client the owner already had keeps folders they chose. Prowlarr gets each client too, for what the owner grabs in Prowlarr's own search, under a `prowlarr` category that no manager imports from, and qBittorrent hands it a new sign-in as it does the managers.
 
+## Jellyfin pairing actions
+
+Jellyfin offers optional connections to Jellystat and Seerr, plus a read-only Fladder/Jellyfin reachability check. Jellystat and Seerr depend on Pre-configure Jellyfin (`requiresHooks`), whose administrator they sign in with: the sign-in the owner chose for the install or collection (`ctx.signIn`), else the answers an older Pre-configure Jellyfin was given, and asked for last. Pre-configure Jellyfin remains optional.
+
+An existing Jellystat account must authenticate; the connector only creates an account when Jellystat reports a fresh setup. Both connectors refuse to replace a different existing media-server binding, a Seerr on the same Jellyfin at another port, protocol or URL path included, and in a collection they step aside (`ctx.skip`) rather than wait on a Try again. Fladder's check does not change its configured server address.
+
+Run the mocked API and password-hash compatibility tests with `bun test _lib/`, then the catalog validator with `bun _lib/validate.ts`. The hook tests make no network requests.
+
 ## Contributing
 
 1. Fork this repository

@@ -215,8 +215,12 @@ export async function run(ctx: HookContext) {
     await signIn(ctx, seerr, await account(ctx));
     await ctx.emitCheckpoint("signin");
   } else if (before.mediaServerType === JELLYFIN) {
-    const current = await call<{ ip?: string; port?: number }>(`${seerr}/api/v1/settings/jellyfin`, apiKey);
-    if (current.ip !== ctx.host || Number(current.port) !== ctx.port) {
+    const current = await call<{ ip?: string; port?: number; useSsl?: boolean; urlBase?: string }>(
+      `${seerr}/api/v1/settings/jellyfin`,
+      apiKey,
+    );
+    // The same server only at the same address, over plain HTTP at its root, as this link sets it
+    if (current.ip !== ctx.host || Number(current.port) !== ctx.port || current.useSsl === true || (current.urlBase ?? "") !== "") {
       // Seerr keeps one media server, and switching it is the owner's to do: trying again can't help
       const message = "Seerr is already set up with another Jellyfin server. Change it in Seerr's own settings, then run Connect to Seerr from Jellyfin.";
       const context = [{ label: "Seerr uses", value: `${current.ip}:${current.port}` }];
