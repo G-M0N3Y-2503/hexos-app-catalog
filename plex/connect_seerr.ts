@@ -195,10 +195,19 @@ export async function run(ctx: HookContext) {
   }
 
   // The libraries the owner chose in Seerr are theirs: only a Seerr with none on gets them turned on.
-  // Seerr lists only Plex's movie and show libraries that have a metadata agent.
+  // Seerr lists only Plex's movie and show libraries that have a metadata agent. Seerr 3.5's sync
+  // fails on a Plex with no library at all (it reads a list Plex leaves out), so that one is left for
+  // later rather than failing the link.
+  const plexLibraries = await fetch(`${ctx.baseUrl}/library/sections?X-Plex-Token=${encodeURIComponent(token)}`, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(15_000),
+  })
+    .then((response) => (response.ok ? (response.json() as Promise<{ MediaContainer?: { Directory?: unknown[] } }>) : undefined))
+    .catch(() => undefined);
   let libraries: SeerrLibrary[] = [];
   try {
-    libraries = await call<SeerrLibrary[]>(`${seerr}/api/v1/settings/plex/library/sync`, apiKey, { method: "POST" });
+    if (plexLibraries?.MediaContainer && !plexLibraries.MediaContainer.Directory?.length) libraries = [];
+    else libraries = await call<SeerrLibrary[]>(`${seerr}/api/v1/settings/plex/library/sync`, apiKey, { method: "POST" });
   } catch (error) {
     ctx.fail("Seerr couldn't read Plex's libraries. Check the Plex address in Seerr's settings, then run Connect to Seerr from Plex again.", [
       { label: "Reason", value: error instanceof Error ? error.message : String(error) },
