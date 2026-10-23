@@ -63,10 +63,11 @@ async function connect(ctx: HookContext, managerId: ManagerId) {
   const setUp = await fetch(`${ctx.baseUrl}/api/v1/settings/public`, { signal: AbortSignal.timeout(15_000) })
     .then((response) => response.json() as Promise<{ initialized?: boolean }>)
     .catch(() => undefined);
+  // The owner skipped the media server's link that sets Seerr up, so trying again can't help
   if (setUp?.initialized === false) {
-    ctx.fail(
-      `Seerr isn't set up yet. Open Seerr and sign in with your media server, then connect ${manager.name} from Seerr's Connections tab.`,
-    );
+    const message = `Seerr isn't set up yet. Open Seerr and sign in with your media server, then connect ${manager.name} from Seerr's Connections tab.`;
+    if (ctx.skip) ctx.skip(message);
+    ctx.fail(message);
   }
   const managerUrl = await ctx.getInstalledAppUrl(managerId);
   if (!managerUrl) ctx.fail(`${manager.name} isn't installed, or HexOS can't find its port`);

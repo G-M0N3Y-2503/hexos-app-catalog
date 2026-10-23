@@ -221,6 +221,14 @@ export interface HookContext {
   fail(message: string, context?: Array<{ label: string; value: string }>): never;
 
   /**
+   * End the hook without its work because the owner skipped something it needs (Plex's sign-in, so
+   * Seerr was never set up), which trying again won't change. A collection run skips the step with
+   * the message and goes on; anywhere else the hook fails with it, as fail() does. Missing on a box
+   * from before it: call `ctx.skip ? ctx.skip(message) : ctx.fail(message)`.
+   */
+  skip?(message: string, context?: Array<{ label: string; value: string }>): never;
+
+  /**
    * Pause the hook at a failed checkpoint and wait for the user to retry or skip.
    * The error and context are surfaced in the UI exactly like `fail()`, but the hook
    * stays alive — it resumes when the user acts.

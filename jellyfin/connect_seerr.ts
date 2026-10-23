@@ -133,7 +133,12 @@ async function jellyfinUserId(ctx: HookContext, signIn: SignIn): Promise<string>
     signal: AbortSignal.timeout(15_000),
   }).catch(() => undefined);
   const id = resp?.ok ? ((await resp.json()) as { User?: { Id?: string } }).User?.Id : undefined;
-  if (!id) ctx.fail(`Jellyfin didn't accept the sign-in for ${signIn.username}. Run Pre-configure Jellyfin, then try again.`);
+  if (!id) {
+    const message = `Jellyfin didn't accept the sign-in for ${signIn.username}. Run Pre-configure Jellyfin, then try again.`;
+    // Jellyfin answered and refused it: its setup was skipped, which trying again won't change
+    if (resp && ctx.skip) ctx.skip(message);
+    ctx.fail(message);
+  }
   return id.replaceAll("-", "");
 }
 

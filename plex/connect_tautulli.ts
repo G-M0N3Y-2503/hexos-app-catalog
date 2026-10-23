@@ -91,7 +91,12 @@ export async function run(ctx: HookContext) {
 
   const config = plexConfig(ctx.mounts);
   const plex = config && readPlex(config);
-  if (!plex) ctx.fail("Plex isn't signed in yet. Run Pre-configure Plex first, then try again.");
+  // The owner skipped Plex's sign-in, so trying again can't help
+  if (!plex) {
+    const message = "Plex isn't signed in yet. Sign in to Plex from its own web page, then connect Tautulli from Plex's Connections tab.";
+    if (ctx.skip) ctx.skip(message);
+    ctx.fail(message);
+  }
   const tautulli = tautulliConfig(await ctx.getInstalledAppMounts("tautulli"));
   if (!tautulli) ctx.fail("HexOS couldn't find Tautulli's settings folder");
   const ini = await waitForTautulliIni(ctx, tautulli);

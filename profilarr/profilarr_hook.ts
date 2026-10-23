@@ -532,8 +532,11 @@ async function connect(ctx: HookContext, managerId: ManagerId) {
     (await askSignIn(ctx, `Enter the sign-in you use for Profilarr, so HexOS can add ${manager.name} to it.`).then((given) =>
       given ? { ...given, made: false, ours: false } : undefined,
     ));
+  // The owner skipped giving the sign-in, so trying again can't help
   if (!signedIn) {
-    ctx.fail(`HexOS couldn't sign in to Profilarr, so it can't add ${manager.name} to it. Run this again from Profilarr's Connections tab.`);
+    const message = `HexOS couldn't sign in to Profilarr, so it can't add ${manager.name} to it. Run this again from Profilarr's Connections tab.`;
+    if (ctx.skip) ctx.skip(message);
+    ctx.fail(message);
   }
   const { session, made } = signedIn;
   const database = await dictionarry(ctx, session);

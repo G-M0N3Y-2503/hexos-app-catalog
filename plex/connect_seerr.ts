@@ -128,7 +128,11 @@ export async function run(ctx: HookContext) {
   if (!seerr) ctx.fail("Seerr isn't installed, or HexOS can't find its port");
   if (!ctx.host || !ctx.port) ctx.fail("HexOS couldn't find this Plex server's address");
   const token = ctx.getInput<PlexOAuthResult>("plex_login")?.authToken;
-  if (!token) ctx.fail("HexOS has no Plex sign-in for this server. Run Connect to Seerr from Plex and sign in to Plex.");
+  if (!token) {
+    const message = "HexOS has no Plex sign-in for this server. Run Connect to Seerr from Plex and sign in to Plex.";
+    if (ctx.skip) ctx.skip(message);
+    ctx.fail(message);
+  }
   const { apiKey, before } = await waitForSeerr(ctx, seerr);
   const machineId = await plexServerId(ctx, token);
   await ctx.emitCheckpoint("locate");
