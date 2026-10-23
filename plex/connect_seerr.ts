@@ -160,7 +160,10 @@ export async function run(ctx: HookContext) {
   } else if (before.mediaServerType === PLEX) {
     await ctx.skipCheckpoint("signin", "Seerr already uses Plex");
   } else {
-    ctx.fail("Seerr is already set up with another media server. Change it in Seerr's own settings.");
+    // Seerr keeps one media server, and switching it is the owner's to do: trying again can't help
+    const message = "Seerr is already set up with another media server. Change it in Seerr's own settings, then run Connect to Seerr from Plex.";
+    if (ctx.skip) ctx.skip(message);
+    ctx.fail(message);
   }
 
   // The server is the owner's once Seerr has one: a Seerr that knows this server, at any address,
@@ -169,9 +172,11 @@ export async function run(ctx: HookContext) {
   if (current.machineId === machineId) {
     await ctx.skipCheckpoint("server", "Seerr already uses this Plex server");
   } else if (current.ip) {
-    ctx.fail("Seerr is already set up with another Plex server. Change it in Seerr's own settings.", [
-      { label: "Seerr uses", value: `${current.ip}:${current.port}` },
-    ]);
+    // Seerr keeps one media server, and switching it is the owner's to do: trying again can't help
+    const message = "Seerr is already set up with another Plex server. Change it in Seerr's own settings, then run Connect to Seerr from Plex.";
+    const context = [{ label: "Seerr uses", value: `${current.ip}:${current.port}` }];
+    if (ctx.skip) ctx.skip(message, context);
+    ctx.fail(message, context);
   } else {
     // Seerr checks the server answers its administrator before it keeps the address
     let saved: PlexSettings | undefined;

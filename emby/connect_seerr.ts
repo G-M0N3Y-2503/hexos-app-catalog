@@ -232,9 +232,11 @@ export async function run(ctx: HookContext) {
     const current = await call<{ ip?: string; port?: number; serverId?: string }>(`${seerr}/api/v1/settings/jellyfin`, apiKey);
     const sameAddress = current.ip === ctx.host && Number(current.port) === ctx.port;
     if (!sameAddress && (!current.serverId || current.serverId !== (await embyServerId(ctx)))) {
-      ctx.fail("Seerr is already set up with another Emby server. Change it in Seerr's own settings.", [
-        { label: "Seerr uses", value: `${current.ip}:${current.port}` },
-      ]);
+      // Seerr keeps one media server, and switching it is the owner's to do: trying again can't help
+      const message = "Seerr is already set up with another Emby server. Change it in Seerr's own settings, then run Connect to Seerr from Emby.";
+      const context = [{ label: "Seerr uses", value: `${current.ip}:${current.port}` }];
+      if (ctx.skip) ctx.skip(message, context);
+      ctx.fail(message, context);
     }
     // Only with the owner's chosen sign-in: run from the card, the Seerr they set up stays theirs
     if (ctx.signIn && (await makeSeerrAdministrator(ctx, seerr, apiKey, ctx.signIn))) {
@@ -243,7 +245,10 @@ export async function run(ctx: HookContext) {
       await ctx.skipCheckpoint("signin", "Seerr already uses this Emby server");
     }
   } else {
-    ctx.fail("Seerr is already set up with another media server. Change it in Seerr's own settings.");
+    // Seerr keeps one media server, and switching it is the owner's to do: trying again can't help
+    const message = "Seerr is already set up with another media server. Change it in Seerr's own settings, then run Connect to Seerr from Emby.";
+    if (ctx.skip) ctx.skip(message);
+    ctx.fail(message);
   }
 
   // The libraries the owner chose in Seerr are theirs: only a Seerr with none on gets them turned on

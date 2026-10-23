@@ -217,9 +217,11 @@ export async function run(ctx: HookContext) {
   } else if (before.mediaServerType === JELLYFIN) {
     const current = await call<{ ip?: string; port?: number }>(`${seerr}/api/v1/settings/jellyfin`, apiKey);
     if (current.ip !== ctx.host || Number(current.port) !== ctx.port) {
-      ctx.fail("Seerr is already set up with another Jellyfin server. Change it in Seerr's own settings.", [
-        { label: "Seerr uses", value: `${current.ip}:${current.port}` },
-      ]);
+      // Seerr keeps one media server, and switching it is the owner's to do: trying again can't help
+      const message = "Seerr is already set up with another Jellyfin server. Change it in Seerr's own settings, then run Connect to Seerr from Jellyfin.";
+      const context = [{ label: "Seerr uses", value: `${current.ip}:${current.port}` }];
+      if (ctx.skip) ctx.skip(message, context);
+      ctx.fail(message, context);
     }
     // Only with the owner's chosen sign-in: run from the card, the Seerr they set up stays theirs
     if (ctx.signIn && (await makeSeerrAdministrator(ctx, seerr, apiKey, ctx.signIn))) {
@@ -228,7 +230,10 @@ export async function run(ctx: HookContext) {
       await ctx.skipCheckpoint("signin", "Seerr already uses this Jellyfin server");
     }
   } else {
-    ctx.fail("Seerr is already set up with another media server. Change it in Seerr's own settings.");
+    // Seerr keeps one media server, and switching it is the owner's to do: trying again can't help
+    const message = "Seerr is already set up with another media server. Change it in Seerr's own settings, then run Connect to Seerr from Jellyfin.";
+    if (ctx.skip) ctx.skip(message);
+    ctx.fail(message);
   }
 
   // The libraries the owner chose in Seerr are theirs: only a Seerr with none on gets them turned on
