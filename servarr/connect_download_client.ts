@@ -4,8 +4,9 @@ import { chownSync, mkdirSync, readFileSync } from "node:fs";
 import type { ContextMount, HookContext, HookInputDeclaration } from "../_lib/hook_context";
 
 /**
- * Adds a download client to Radarr, Sonarr or Lidarr: the hook each of them declares per client
- * (connect-qbittorrent, connect-deluge, connect-sabnzbd, connect-nzbget). The client is added
+ * Adds a download client to Radarr, Sonarr, Lidarr or Prowlarr: the hook each of them declares per
+ * client (connect-qbittorrent, connect-deluge, connect-sabnzbd, connect-nzbget). Prowlarr's is for
+ * what the owner grabs in Prowlarr's own search, which lands in a prowlarr category no manager imports. The client is added
  * through the manager's own schema, so a field the manager renames is still filled, and saved with
  * the manager's own connection test, so a client it can't reach is refused rather than kept.
  *
@@ -32,16 +33,17 @@ const MANAGERS = {
   radarr: { name: "Radarr", api: "v3", categoryField: "movieCategory" },
   sonarr: { name: "Sonarr", api: "v3", categoryField: "tvCategory" },
   lidarr: { name: "Lidarr", api: "v1", categoryField: "musicCategory" },
+  prowlarr: { name: "Prowlarr", api: "v1", categoryField: "category" },
 } as const;
 
 type ManagerId = keyof typeof MANAGERS;
 
 /** Each manager's category: the manager's own choice in a torrent client, the client's own for Usenet. */
 const CATEGORIES: Record<string, Record<ManagerId, string>> = {
-  qbittorrent: { radarr: "radarr", sonarr: "tv-sonarr", lidarr: "lidarr" },
-  deluge: { radarr: "radarr", sonarr: "tv-sonarr", lidarr: "lidarr" },
-  sabnzbd: { radarr: "movies", sonarr: "tv", lidarr: "audio" },
-  nzbget: { radarr: "Movies", sonarr: "Series", lidarr: "Music" },
+  qbittorrent: { radarr: "radarr", sonarr: "tv-sonarr", lidarr: "lidarr", prowlarr: "prowlarr" },
+  deluge: { radarr: "radarr", sonarr: "tv-sonarr", lidarr: "lidarr", prowlarr: "prowlarr" },
+  sabnzbd: { radarr: "movies", sonarr: "tv", lidarr: "audio", prowlarr: "prowlarr" },
+  nzbget: { radarr: "Movies", sonarr: "Series", lidarr: "Music", prowlarr: "Prowlarr" },
 };
 
 interface Field {

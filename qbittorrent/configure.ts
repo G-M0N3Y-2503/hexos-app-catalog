@@ -9,8 +9,8 @@ import type { ContextMount, HookContext, HookInputDeclaration } from "../_lib/ho
  * finished ones. A qBittorrent HexOS just installed has both from seed-webui, so this only checks
  * them; one the owner already had, which a collection brings in, gets them here through its own
  * WebUI. With no sign-in chosen (a run from the app's card) its sign-in stays as it is. The Radarr,
- * Sonarr and Lidarr installed beside it get the chosen sign-in at once (`shareSignIn`), so none is
- * locked out for using the old one before its link runs. Read at qBittorrent 5.3.0, the version
+ * Sonarr, Lidarr and Prowlarr installed beside it get the chosen sign-in at once (`shareSignIn`), so
+ * none is locked out for using the old one before its link runs. Read at qBittorrent 5.3.0, the version
  * TrueNAS pins.
  */
 
@@ -35,8 +35,8 @@ function configMount(mounts: ContextMount[]): ContextMount | undefined {
   return mounts.find((m) => m.containerPath === "/config") ?? mounts.find((m) => m.hostPath.endsWith("/qbittorrent/config"));
 }
 
-/** Radarr, Sonarr and Lidarr, by the API version each keeps its download clients under. */
-const MANAGERS = { radarr: "v3", sonarr: "v3", lidarr: "v1" } as const;
+/** Radarr, Sonarr, Lidarr and Prowlarr, by the API version each keeps its download clients under. */
+const MANAGERS = { radarr: "v3", sonarr: "v3", lidarr: "v1", prowlarr: "v1" } as const;
 
 interface DownloadClient {
   id: number;

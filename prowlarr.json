@@ -164,6 +164,118 @@
       "entrypoint": "lidarr",
       "timeout": 120,
       "retries": 0
+    },
+    {
+      "id": "connect-qbittorrent",
+      "title": "Connect to qBittorrent",
+      "description": "Sends what you grab in Prowlarr's own search to qBittorrent.",
+      "kind": "connect",
+      "conditions": [
+        {
+          "role": "visibility",
+          "type": "appInstalled",
+          "app": "qbittorrent"
+        },
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "qbittorrent"
+        },
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "prowlarr"
+        }
+      ],
+      "rerun": "converge",
+      "script": "servarr/connect_download_client.ts",
+      "entrypoint": "qbittorrent",
+      "timeout": 900,
+      "retries": 0
+    },
+    {
+      "id": "connect-deluge",
+      "title": "Connect to Deluge",
+      "description": "Sends what you grab in Prowlarr's own search to Deluge.",
+      "kind": "connect",
+      "conditions": [
+        {
+          "role": "visibility",
+          "type": "appInstalled",
+          "app": "deluge"
+        },
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "deluge"
+        },
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "prowlarr"
+        }
+      ],
+      "rerun": "converge",
+      "script": "servarr/connect_download_client.ts",
+      "entrypoint": "deluge",
+      "timeout": 900,
+      "retries": 0
+    },
+    {
+      "id": "connect-sabnzbd",
+      "title": "Connect to SABnzbd",
+      "description": "Sends what you grab in Prowlarr's own search to SABnzbd.",
+      "kind": "connect",
+      "conditions": [
+        {
+          "role": "visibility",
+          "type": "appInstalled",
+          "app": "sabnzbd"
+        },
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "sabnzbd"
+        },
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "prowlarr"
+        }
+      ],
+      "rerun": "converge",
+      "script": "servarr/connect_download_client.ts",
+      "entrypoint": "sabnzbd",
+      "timeout": 120,
+      "retries": 0
+    },
+    {
+      "id": "connect-nzbget",
+      "title": "Connect to NZBGet",
+      "description": "Sends what you grab in Prowlarr's own search to NZBGet.",
+      "kind": "connect",
+      "conditions": [
+        {
+          "role": "visibility",
+          "type": "appInstalled",
+          "app": "nzbget"
+        },
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "nzbget"
+        },
+        {
+          "role": "availability",
+          "type": "appRunning",
+          "app": "prowlarr"
+        }
+      ],
+      "rerun": "converge",
+      "script": "servarr/connect_download_client.ts",
+      "entrypoint": "nzbget",
+      "timeout": 120,
+      "retries": 0
     }
   ]
 }
