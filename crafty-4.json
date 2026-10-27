@@ -5,7 +5,7 @@
     "changeLog": "Initial"
   },
   "requirements": {
-    "locations": ["ApplicationsPerformance, ApplicationsCapacity"],
+    "locations": ["ApplicationsPerformance", "ApplicationsCapacity"],
     "specifications": ["2CORE", "4GBRAM"],
     "permissions": ["READ_WRITE_LOCATIONS"],
     "ports": [8443]
@@ -17,7 +17,7 @@
     },
     { "path": "$LOCATION(ApplicationsCapacity)/crafty-4/backups", "owner": { "user": "apps" }, "snapshot": { "id": "backups" } },
     { "path": "$LOCATION(ApplicationsPerformance)/crafty-4/config", "owner": { "user": "apps" }, "snapshot": { "id": "config" } },
-    { "path": "$LOCATION(ApplicationsPerformance)/crafty-4/import", "owner": { "user": "apps" }, "snapshot": { "id": "data" } },
+    { "path": "$LOCATION(ApplicationsPerformance)/crafty-4/import", "owner": { "user": "apps" }, "snapshot": { "id": "import" } },
     { "path": "$LOCATION(ApplicationsPerformance)/crafty-4/logs", "owner": { "user": "apps" }, "snapshot": { "id": "logs" } },
     { "path": "$LOCATION(ApplicationsCapacity)/crafty-4/servers", "owner": { "user": "apps" }, "snapshot": { "id": "data" } }
   ],
