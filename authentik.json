@@ -54,6 +54,7 @@
         "onAfterInstall",
         "userAction"
       ],
+      "summary": "Installs the LDAP blueprint and the connection manifest that let spoke apps federate sign-in. A second run changes nothing once the hub is set up.",
       "rerun": "converge",
       "script": "authentik/authentik_hook.ts",
       "entrypoint": "afterInstall",
