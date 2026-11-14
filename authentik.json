@@ -1,0 +1,67 @@
+{
+  "version": 6,
+  "script": {
+    "version": "2.4.0",
+    "changeLog": "Hub installs the LDAP blueprint and a connection manifest. OAuth2 clients are created on-demand by spoke hooks when each consumer app connects."
+  },
+  "requirements": {
+    "locations": [
+      "ApplicationsPerformance"
+    ],
+    "specifications": [
+      "4CORE",
+      "1GB"
+    ],
+    "permissions": [
+      "READ_WRITE_LOCATIONS"
+    ],
+    "ports": [
+      30140
+    ]
+  },
+  "ensure_directories_exists": [
+    {
+      "path": "$LOCATION(ApplicationsPerformance)/authentik/data",
+      "snapshot": {
+        "id": "data"
+      }
+    },
+    {
+      "path": "$LOCATION(ApplicationsPerformance)/authentik/templates"
+    }
+  ],
+  "app_values": {
+    "network": {
+      "web_port": {
+        "bind_mode": "published",
+        "port_number": "$PORT(30140)"
+      }
+    },
+    "storage": {
+      "data": "$HOST_PATH($LOCATION(ApplicationsPerformance)/authentik/data)",
+      "templates": "$HOST_PATH($LOCATION(ApplicationsPerformance)/authentik/templates)"
+    },
+    "additional_envs": {
+      "AUTHENTIK_BOOTSTRAP_TOKEN": "hexos-sso",
+      "AUTHENTIK_SECRET_KEY": "$RANDOM_STRING(64)"
+    }
+  },
+  "hooks": [
+    {
+      "id": "setup-authentik",
+      "title": "Setup Authentik SSO Hub",
+      "events": [
+        "onAfterInstall",
+        "userAction"
+      ],
+      "rerun": "converge",
+      "script": "authentik/authentik_hook.ts",
+      "entrypoint": "afterInstall",
+      "timeout": 900,
+      "retries": 0,
+      "surfaces": [
+        "card"
+      ]
+    }
+  ]
+}
