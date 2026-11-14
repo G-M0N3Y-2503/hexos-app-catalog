@@ -368,6 +368,32 @@
       "entrypoint": "sonarr",
       "timeout": 300,
       "retries": 0
+    },
+    {
+      "id": "enable-sso",
+      "title": "Enable SSO with Authentik",
+      "description": "Creates an OAuth2 client in Authentik and configures Jellyfin to sign in via it.",
+      "events": [
+        "onAfterInstall",
+        "userAction"
+      ],
+      "kind": "connect",
+      "conditions": [
+        {
+          "role": "visibility",
+          "type": "appInstalled",
+          "app": "authentik"
+        }
+      ],
+      "rerun": "idempotent",
+      "script": "jellyfin/jellyfin_sso.ts",
+      "entrypoint": "afterInstall",
+      "timeout": 300,
+      "retries": 2,
+      "surfaces": [
+        "card"
+      ],
+      "optional": true
     }
   ],
   "widgetsSchema": 3,
