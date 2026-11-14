@@ -1,14 +1,24 @@
 {
-  "version": 4,
+  "version": 6,
   "script": {
     "version": "1.1.0",
-    "changeLog": "Upgraded to V4 install script format"
+    "changeLog": "Upgraded to V6 install script format with hooks section for SSO support"
   },
   "requirements": {
-    "locations": ["ApplicationsPerformance", "Photos"],
-    "specifications": ["2CORE", "256MB"],
-    "permissions": ["READ_WRITE_LOCATIONS"],
-    "ports": [2283]
+    "locations": [
+      "ApplicationsPerformance",
+      "Photos"
+    ],
+    "specifications": [
+      "2CORE",
+      "256MB"
+    ],
+    "permissions": [
+      "READ_WRITE_LOCATIONS"
+    ],
+    "ports": [
+      2283
+    ]
   },
   "ensure_directories_exists": [
     {
@@ -18,8 +28,25 @@
       "path": "$LOCATION(Photos)",
       "network_share": true
     },
-    { "path": "$LOCATION(Photos)/immich", "owner": { "user": "apps" }, "snapshot": { "id": "data" } },
-    { "path": "$LOCATION(ApplicationsPerformance)/immich/postgres_data", "owner": { "user": "netdata", "group": "docker" }, "snapshot": { "id": "db" } }
+    {
+      "path": "$LOCATION(Photos)/immich",
+      "owner": {
+        "user": "apps"
+      },
+      "snapshot": {
+        "id": "data"
+      }
+    },
+    {
+      "path": "$LOCATION(ApplicationsPerformance)/immich/postgres_data",
+      "owner": {
+        "user": "netdata",
+        "group": "docker"
+      },
+      "snapshot": {
+        "id": "db"
+      }
+    }
   ],
   "app_values": {
     "release_name": "immich",
@@ -53,5 +80,31 @@
       },
       "gpus": "$GPU_CONFIG()"
     }
-  }
+  },
+  "hooks": [
+    {
+      "id": "enable-sso",
+      "title": "Enable SSO with Authentik",
+      "description": "Creates an OAuth2 client in Authentik and configures Immich to sign in via it.",
+      "events": [
+        "userAction"
+      ],
+      "kind": "connect",
+      "conditions": [
+        {
+          "role": "visibility",
+          "type": "appInstalled",
+          "app": "authentik"
+        }
+      ],
+      "rerun": "idempotent",
+      "script": "immich/immich_sso.ts",
+      "entrypoint": "afterInstall",
+      "timeout": 300,
+      "retries": 2,
+      "surfaces": [
+        "card"
+      ]
+    }
+  ]
 }
